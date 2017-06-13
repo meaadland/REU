@@ -1,0 +1,52 @@
+---
+title: "Cluster Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=TRUE }
+drug<- read.table(file.choose(), header=T, sep=",")
+head(drug)
+names(drug)
+drug = drug[,-1] #delete column id
+row.names(drug) = drug$State
+head(drug)
+x = drug[,2:6]
+x = scale(x)
+head(x)
+x.dist= dist(x, method="euclidean") #calculates all the pairwise distances
+x.dist #lower trianglular
+```
+
+```{r plot, echo=TRUE}
+#merge observations into clusters and indicate method
+x.clust = hclust(x.dist, method="single") 
+x.clust = hclust(x.dist, method="complete")
+x.clust = hclust(x.dist, method="ward.D")
+plot(x.clust)
+```
+
+
+```{r plot, echo=TRUE}
+state.grps=cutree(x.clust,k=6) #cut tree, 6 clusters
+state.grps #shows what is in each cluster through writing
+library(MASS)
+clust.grps(x,state.grps,parcoord=TRUE) #more descriptive analysis of clusters
+#vertical lines show the range of the data, line graphs are graphing the variable means, x-axis indicates the variable
+
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

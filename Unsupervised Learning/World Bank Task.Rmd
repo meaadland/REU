@@ -18,17 +18,30 @@ WB.cor = cor(WorldBank[,-c(1,2)])
 Clean the World Bank data of missing values, subset the data to include limited variables, observe the eigenvalues, make sure to standardize data. 
 ```{r, echo=TRUE}
 row.names(WorldBank)= WorldBank$Country.Name
-names(WB.noNA)
 WB.noNA = na.omit(WorldBank)
+names(WB.noNA)
 WB.sub1=WB.noNA[,c(5,7,8,12,18,19,22,23,31,32,35,36,45,48,50,51)]
-WB.PCA = eigen(cor(WB.sub1))
+WB.eigen = eigen(cor(WB.sub1))
+WB.eigen
 WB.pca= princomp(WB.sub1, cor=TRUE)
-
+summary(WB.pca) #gives standard deviations of eigenvalues-- look for pcas above 1
+loadings(WB.pca)
+sort(abs(WB.pca$loadings[,1])) #shows first loading for each variable sorted by absolute value
 ```
 
 Biplot of PCA1 and PCA2
 ```{r pressure, echo=TRUE, fig.height=10, fig.width=10}
 biplot(WB.pca,choices=1:2,cex=.8)
+```
+
+Brant's Additional Notes
+```{r, echo=FALSE}
+x = scale(WB.sub1)
+var(x)
+x.svd=svd(x) #single value decomposition
+attributes(x.svd)
+x.svd$u
+x.svd$v #same as loadings
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,53 @@
+---
+title: "mca task"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r education, echo=TRUE}
+#Insert packages and education data
+install.packages("FactoMineR")
+library(FactoMineR)
+Education = read.table(file.choose(), header=T, sep=",")
+head(Education)
+names(Education)
+
+#Change variables to factor format
+Education$SCHOOL<- as.factor(Education$SCHOOL)
+Education$LIT<- as.factor(Education$LIT)
+Education$EDATTAIN<- as.factor(Education$EDATTAIN)
+Education$YRSCHOOL<- as.factor(Education$YRSCHOOL)
+summary(Education)
+
+#Change values indicating not in universe, missing, or unknown to NA
+Education[,7:9][Education[,7:9]==9]<- NA
+Education[,7:9][Education[,7:9]==0]<- NA
+Education[, 10][Education[, 10]==90]<- NA
+Education[, 10][Education[, 10]==98]<- NA
+
+#Omit NAs
+Education.noNA = na.omit(Education)
+x=Education.noNA[,7:10]
+```
+
+
+Multiple Correspondence Analysis
+```{r plot, echo=TRUE, fig.height=12, fig.width=12}
+x.mca=MCA(x) #multiple correspondence analysis
+plot(x.mca)
+summary(x.mca) #90 percent is goal for dimension
+
+```
+
+Summary of Plots
+MCA factor Map
+  Q1- Those who completed 12-13 years of school completed a secondary degree or university. 
+  Q2&3- Those who completed less than primary education or never attended school were in school          for few years and are often illiterate.
+  Q4- People who completed primary were in school between 7 and 11 years usually. 
+  
+  
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

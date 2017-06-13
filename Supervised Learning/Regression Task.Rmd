@@ -1,0 +1,79 @@
+---
+title: "Regression Task"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r task, echo= TRUE}
+Diamonds = read.table(file.choose(), header=TRUE, sep=",")
+Diamonds$Price = log(Diamonds$Price)
+Diamonds.train = Diamonds[Diamonds$Test<2,]
+Diamonds.test = Diamonds[Diamonds$Test==2,]
+```
+
+
+```{r model, echo=FALSE}
+#0.9088
+lm.D1 = lm(Price~ Carats + Clarity + Color + Cut + TDdiff + Table + TDratio, data=Diamonds.train)
+summary(lm.D1)
+plot(lm.D1)
+
+#0.9704
+lm.D2 = lm(Price~ poly(Carats,3) + Clarity + Color + Cut + TDratio + Table, data=Diamonds.train)
+summary(lm.D2)
+plot(lm.D2)
+
+#0.973
+lm.D3 = lm(Price~ poly(Carats,3)*Clarity +Color +Cut + TDratio + Table, data=Diamonds.train)
+summary(lm.D3)
+plot(lm.D3)
+anova(lm.D3)
+
+#0.9732
+lm.D4 = lm(Price~ poly(Carats,3)*Clarity +Color*Cut + TDratio + Table, data=Diamonds.train)
+summary(lm.D4)
+plot(lm.D4)
+anova(lm.D4)
+
+#0.9774
+lm.D5 = lm(Price~ poly(Carats,3)*Clarity + Color*Cut + Clarity*Cut + Color*Clarity+ TDdiff+ Table, data=Diamonds.train)
+summary(lm.D5)
+plot(lm.D5)
+anova(lm.D5)
+```
+
+Predict log(Price) and then the Price for the diamonds in the test data
+```{r}
+ypredlog=predict(lm.D5, newdata=Diamonds.test)
+ypred = exp(ypredlog)
+
+yactual = exp(Diamonds$Price)
+plot(yactual, ypred, xlab="Actual Price", ylab="Predicted Price")
+plot(Diamonds.test$Price, ypred)
+abline(0,1,lwd=3,col="blue")
+```
+
+```{r}
+PredAcc = function(y,ypred){
+  	RMSEP = sqrt(mean((y-ypred)^2))
+  	MAE = mean(abs(y-ypred))
+  	MAPE = mean(abs(y-ypred)/y)*100
+  	cat("RMSEP\n")
+  	cat("===============\n")
+  	cat(RMSEP,"\n\n")
+  	cat("MAE\n")
+ 	cat("===============\n")
+  	cat(MAE,"\n\n")
+  	cat("MAPE\n")
+  	cat("===============\n")
+  	cat(MAPE,"\n\n")
+  	return(data.frame(RMSEP=RMSEP,MAE=MAE,MAPE=MAPE))
+}
+
+PredAcc(yactual, ypred)
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,88 @@
+---
+title: "Regression Task 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r, echo=TRUE}
+ChiTrain = read.table(file.choose(),header=T,sep=",")
+ChiTest = read.table(file.choose(),header=T,sep=",")
+names(ChiTrain)
+head(ChiTrain)
+str(ChiTrain)
+```
+
+
+
+```{r pressure, echo=FALSE}
+ChiTrain$ListPrice = log(ChiTrain$ListPrice)
+#0.7887
+lm.C1 = lm(ListPrice~ Type + City + ZIP + BEDS + BATHS + ImputedSQFT + ParkSpots + HasGarage + DOM +BeenReduced + SoldPrev + LATITUDE + LONGITUDE, data=ChiTrain)
+summary(lm.C1)
+plot(lm.C1)
+anova(lm.C1)
+
+#0.8085
+lm.C2 = lm(ListPrice~ poly(ImputedSQFT,3) + Type + City + BEDS + BATHS + ParkSpots + HasGarage + BeenReduced + SoldPrev, data=ChiTrain)
+summary(lm.C2)
+plot(lm.C2)
+
+#0.8235
+lm.C3 = lm(ListPrice~ poly(ImputedSQFT,3) + ImputedSQFT*City + Type*City + BEDS*BATHS + ParkSpots*HasGarage + BeenReduced + SoldPrev, data=ChiTrain)
+summary(lm.C3)
+plot(lm.C3)
+anova(lm.C3)
+
+#0.827
+lm.C4= lm(ListPrice~ poly(ImputedSQFT,3) + ImputedSQFT*City + Type*ImputedSQFT + BATHS*ImputedSQFT+ BEDS + ParkSpots*HasGarage + BeenReduced, data=ChiTrain)
+summary(lm.C4)
+plot(lm.C4)
+anova(lm.C4)
+
+names(ChiTrain)
+
+#0.937
+lm.C5= lm(ListPrice~ poly(ImputedSQFT,3) + ImputedSQFT*City + ListPrice*City  + ParkSpots + Type*ImputedSQFT + HasGarage + BeenReduced + BATHS, data=ChiTrain)
+summary(lm.C5)
+plot(lm.C5)
+anova(lm.C5)
+```
+
+
+```{r}
+ypredlog=predict(lm.C5, newdata=ChiTest)
+ypred = exp(ypredlog)
+
+yactual = exp(ChiTest$ListPrice)
+plot(ChiTest$ListPrice, ypred)
+abline(0,1,lwd=3,col="blue")
+```
+```{r}
+PredAcc = function(y,ypred){
+  	RMSEP = sqrt(mean((y-ypred)^2))
+  	MAE = mean(abs(y-ypred))
+  	MAPE = mean(abs(y-ypred)/y)*100
+  	cat("RMSEP\n")
+  	cat("===============\n")
+  	cat(RMSEP,"\n\n")
+  	cat("MAE\n")
+ 	cat("===============\n")
+  	cat(MAE,"\n\n")
+  	cat("MAPE\n")
+  	cat("===============\n")
+  	cat(MAPE,"\n\n")
+  	return(data.frame(RMSEP=RMSEP,MAE=MAE,MAPE=MAPE))
+}
+
+PredAcc(yactual, ypred)
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

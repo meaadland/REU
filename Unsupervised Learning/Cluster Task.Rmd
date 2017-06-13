@@ -1,0 +1,64 @@
+---
+title: "Cluster Task"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Import data, strip NAs, subset columns, scale, and make matrix of distances
+```{r cluster, echo=TRUE}
+world<- read.table(file.choose(), header=T, sep=",")
+head(world)
+names(world)
+row.names(world) = world$Country.Name
+world.noNA = na.omit(world) #omit na values
+names(world.noNA)
+world.sub=world.noNA[,c(7,8,18,19,22,23,31,32,36,45,48)] #subset columns
+
+world.sub = scale(world.sub)
+
+world.dist = dist(world.sub, method= "euclidean")
+```
+
+
+Make Cluster Dendrogram
+```{r plot, echo= TRUE, fig.height= 15, fig.width=15}
+x.clust = hclust(world.dist, method="ward.D")
+plot(x.clust)
+
+```
+
+
+
+Use Clust.grps to make a plot
+```{r plot, echo=TRUE, fig.height= 12, fig.width= 12}
+
+state.grps=cutree(x.clust,k=6) #cut tree, 6 clusters
+state.grps #shows what is in each cluster through writing
+library(MASS)
+clust.grps(x,state.grps,parcoord=TRUE)
+
+```
+
+Take a Random Sample of 50
+```{r plot, echo=TRUE, fig.height=15, fig.width=15}
+small.sub<-world.sub[sample(1:nrow(world.sub), 50, replace=FALSE),]
+small.sub<-scale(small.sub)
+small.dist = dist(small.sub, method = "euclidean")
+small.clust = hclust(small.dist, method="ward.D")
+plot(small.clust)
+```
+
+Make Plots from 50
+```{r plot, echo=TRUE, fig.height=15, fig.width=15}
+state.grps=cutree(small.clust,k=6) #cut tree, 6 clusters
+state.grps #shows what is in each cluster through writing
+library(MASS)
+clust.grps(small.sub,state.grps,parcoord=TRUE)
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
