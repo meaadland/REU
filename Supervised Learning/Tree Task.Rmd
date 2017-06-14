@@ -1,0 +1,171 @@
+---
+title: "Tree Task"
+author: "Tree based Regression Models"
+date: "June 14, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=TRUE}
+# Tasks - you will need to read in the ChiHomes(train).csv and 
+# ChiHomes(test).csv files.
+#
+library(rpart)
+library(rpart.plot)
+
+ChiTrain = read.table(file.choose(),header=T,sep=",")
+ChiTest = read.table(file.choose(),header=T,sep=",")
+
+ChiTrain2 = ChiTrain[,-3]
+ChiTest2 = ChiTest[,-3]
+
+chi.rpart = rpart(log(ListPrice)~.,data=ChiTrain2)
+par(mfrow=c(1,1))
+plot(chi.rpart)
+text(chi.rpart)
+
+```
+
+```{r}
+
+prp(chi.rpart,type=4,digits=4)
+```
+Prediction Accuracy of Default Model
+```{r}
+PredAcc = function(y,ypred){
+    RMSEP = sqrt(mean((y-ypred)^2))
+    MAE = mean(abs(y-ypred))
+    MAPE = mean(abs(y-ypred)/y)*100
+    cat("RMSEP\n")
+    cat("===============\n")
+    cat(RMSEP,"\n\n")
+    cat("MAE\n")
+    cat("===============\n")
+    cat(MAE,"\n\n")
+    cat("MAPE\n")
+    cat("===============\n")
+    cat(MAPE,"\n\n")
+    return(data.frame(RMSEP=RMSEP,MAE=MAE,MAPE=MAPE))
+}
+
+ypredlog = predict(chi.rpart,newdata=ChiTest2)
+ypred = exp(ypredlog)
+PredAcc(ChiTest2$ListPrice,ypred)
+
+#The MAPE for this plot is 26.6. 
+```
+```{r cplot, echo=TRUE}
+plotcp(chi.rpart) #cp = 0.015 or 0.014
+```
+
+Write in rpart.logsscv function
+```{r, echo=TRUE}
+rpart.sscv = function(fit,data,p=.667,B=100,
+                      cp=fit$control$cp,minsplit=fit$control$minsplit) {
+    MSE = rep(0,B)
+    MAE = rep(0,B)
+    MAPE = rep(0,B)
+    y = fit$y
+    n = nrow(data)
+    ss <- floor(n*p)
+    for (i in 1:B) {
+        sam = sample(1:n,ss,replace=F)
+        fit2 = rpart(formula(fit),data=data[sam,],cp=cp,minsplit=minsplit)
+        ynew = predict(fit2,newdata=data[-sam,])
+        MSE[i] = mean((y[-sam]-ynew)^2)
+        MAE[i] = mean(abs(y[-sam]-ynew))
+        MAPE[i] = mean((abs(y[-sam]-ynew)/y[-sam]))*100
+    }
+    RMSEP = sqrt(mean(MSE))
+    MAEP = mean(MAE)
+    MAPEP = mean(MAPE)
+    cat("RMSEP\n")
+    cat("===============\n")
+    cat(RMSEP,"\n\n")
+    cat("MAEP\n")
+    cat("===============\n")
+    cat(MAEP,"\n\n")
+    cat("MAPEP\n")
+    cat("===============\n")
+    cat(MAPEP,"\n\n")
+    temp = data.frame(MSEP=MSE,MAEP=MAE,MAPEP=MAPE)
+    return(temp)
+}
+
+
+rpart.logsscv = function(fit,data,p=.667,B=100,
+                      cp=fit$control$cp,minsplit=fit$control$minsplit) {
+    MSE = rep(0,B)
+    MAE = rep(0,B)
+    MAPE = rep(0,B)
+    y = exp(fit$y)
+    n = nrow(data)
+    ss <- floor(n*p)
+    for (i in 1:B) {
+        sam = sample(1:n,ss,replace=F)
+        fit2 = rpart(formula(fit),data=data[sam,],cp=cp,minsplit=minsplit)
+        ynew = exp(predict(fit2,newdata=data[-sam,]))
+        MSE[i] = mean((y[-sam]-ynew)^2)
+        MAE[i] = mean(abs(y[-sam]-ynew))
+        MAPE[i] = mean((abs(y[-sam]-ynew)/y[-sam]))*100
+    }
+    RMSEP = sqrt(mean(MSE))
+    MAEP = mean(MAE)
+    MAPEP = mean(MAPE)
+    cat("RMSEP\n")
+    cat("===============\n")
+    cat(RMSEP,"\n\n")
+    cat("MAEP\n")
+    cat("===============\n")
+    cat(MAEP,"\n\n")
+    cat("MAPE\n")
+    cat("===============\n")
+    cat(MAPEP,"\n\n")
+    temp = data.frame(MSEP=MSE,MAEP=MAE,MAPEp=MAPE)
+    return(temp)
+}
+```
+
+```{r, echo=TRUE}
+results = chi.rpart2 = rpart.logsscv(chi.rpart,data=ChiTrain2,cp=.0149, minsplit= 5) #27.47
+results = chi.rpart2 = rpart.logsscv(chi.rpart,data=ChiTrain2,cp=.014, minsplit= 5) #27.47
+```
+
+
+```{r}
+
+#
+# Code for Task 3 on pg. 20
+#
+Diamonds = read.table(file.choose(),header=T,sep=",")
+library(rpart)
+library(rpart.plot)
+fit = rpart(log(Price)~.,data=Diamonds)
+
+tree.vary = function(fit,data) {
+    n = nrow(data)
+    sam = sample(1:n,floor(n*.5),replace=F)
+    temp = rpart(formula(fit),data=data[sam,])
+    prp(temp,type=4,digits=3)
+}
+
+tree.vary(fit,data=Diamonds)
+tree.vary(fit,data=Diamonds)
+tree.vary(fit,data=Diamonds)
+
+#The tree is different each time the tree.vary function runs
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

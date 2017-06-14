@@ -7,11 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r, echo=TRUE}
 ChiTrain = read.table(file.choose(),header=T,sep=",")
@@ -19,12 +15,15 @@ ChiTest = read.table(file.choose(),header=T,sep=",")
 names(ChiTrain)
 head(ChiTrain)
 str(ChiTrain)
+dim(ChiTest)
+
 ```
 
 
 
 ```{r pressure, echo=FALSE}
 ChiTrain$ListPrice = log(ChiTrain$ListPrice)
+ChiTest$ListPrice = log(ChiTest$ListPrice)
 #0.7887
 lm.C1 = lm(ListPrice~ Type + City + ZIP + BEDS + BATHS + ImputedSQFT + ParkSpots + HasGarage + DOM +BeenReduced + SoldPrev + LATITUDE + LONGITUDE, data=ChiTrain)
 summary(lm.C1)
@@ -50,16 +49,22 @@ anova(lm.C4)
 
 names(ChiTrain)
 
-#0.937
-lm.C5= lm(ListPrice~ poly(ImputedSQFT,3) + ImputedSQFT*City + ListPrice*City  + ParkSpots + Type*ImputedSQFT + HasGarage + BeenReduced + BATHS, data=ChiTrain)
+#0.8262
+lm.C5= lm(ListPrice~ poly(ImputedSQFT,3) + ImputedSQFT*City + ParkSpots + Type*ImputedSQFT + HasGarage + BeenReduced + BATHS, data=ChiTrain)
 summary(lm.C5)
 plot(lm.C5)
 anova(lm.C5)
+
+#0.8315
+lm.C6 = lm(ListPrice~ poly(ImputedSQFT,3) + LATITUDE*LONGITUDE + Type*ImputedSQFT + ImputedSQFT*City + BATHS + ParkSpots + HasGarage + BeenReduced, data=ChiTrain)
+summary(lm.C6)
+plot(lm.C6)
+anova(lm.C6)
 ```
 
 
 ```{r}
-ypredlog=predict(lm.C5, newdata=ChiTest)
+ypredlog=predict(lm.C6, newdata=ChiTest)
 ypred = exp(ypredlog)
 
 yactual = exp(ChiTest$ListPrice)
