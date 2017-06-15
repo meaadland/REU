@@ -1,0 +1,98 @@
+---
+title: "Cubist Task"
+author: "Tree based Regression Models"
+date: "June 15, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Cubist Task
+```{r task, echo=TRUE}
+# TASKS - Solubility data
+# Read in the Solubility(train).csv and Solubility(test).csv files.
+#
+library(Cubist)
+
+
+ChiTrain = read.table(file.choose(),header=T,sep=",")
+ChiTest = read.table(file.choose(),header=T,sep=",")
+
+ChiTrain2 = ChiTrain[,-3]
+ChiTest2 = ChiTest[,-3]
+
+
+Xtrain = ChiTrain2[,-4]
+Ytrain = ChiTrain2[,4]
+Xtest = ChiTest2[,-4]
+ytest = ChiTest2[,4]
+#
+# Replace the extra stuff the commands below by something appropriate!
+#
+chi.cub = cubist(Xtrain,Ytrain,committees = 2)
+summary(chi.cub)
+```
+
+
+
+```{r predict, echo=FALSE}
+ypred = predict(chi.cub,newdata=Xtest,neighbors=3)  #0.752, 0.496
+PredAcc(ytest,ypred)
+
+chi.cub = cubist(Xtrain,Ytrain,committees = 8) #0.725, 0.492
+ypred = predict(chi.cub,newdata=Xtest,neighbors=3)
+PredAcc(ytest,ypred)
+
+chi.cub = cubist(Xtrain,Ytrain,committees = 9) #0.723, 0.491, 14.737
+ypred = predict(chi.cub,newdata=Xtest,neighbors=3)
+PredAcc(ytest,ypred)
+
+chi.cub = cubist(Xtrain,Ytrain,committees = 8) #0.703, 0.471, 13.933
+ypred = predict(chi.cub,newdata=Xtest,neighbors=9)
+PredAcc(ytest,ypred)
+
+chi.cub = cubist(Xtrain,Ytrain,committees = 8) #0.705, 0.470, 13.90
+ypred = predict(chi.cub,newdata=Xtest,neighbors=8)
+PredAcc(ytest,ypred)
+```
+Boosted 
+```{r}
+library(gbm)
+chi.gbm = gbm(log(ListPrice)~.,data=ChiTrain2,distribution="gaussian",
+n.trees=5000,shrinkage=.01,interaction.depth=4,
+bag.fraction=0.5,train.fraction=.8,n.minobsinnode=5,cv.folds=5,
+keep.data=T,verbose=T) #220 is last improvement
+
+chi.gbm
+
+gbm.perf(chi.gbm,method="OOB")
+```
+
+```{r}
+gbm.perf(chi.gbm,method="test")
+```
+
+```{r}
+gbm.perf(chi.gbm,method="cv")
+```
+
+
+
+```{r}
+ChiTrain<-read.table(file.choose(), header = T, sep =",")
+ChiTest<-read.table(file.choose(), header=T,sep=",")
+library(gbm)
+chi.gbm = gbm(log(ListPrice)~.,data=ChiTrain,distribution="gaussian",
+n.trees=10000,shrinkage=.05,interaction.depth=5,bag.fraction=0.5,train.fraction=.8,
+n.minobsinnode=5,cv.folds=5,keep.data=T,verbose=F)
+chi.gbm
+
+ypred = predict(chi.gbm,newdata=ChiTest,n.trees=3000)
+ypred = exp(ypred)
+PredAcc(ChiTest$ListPrice,ypred)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
